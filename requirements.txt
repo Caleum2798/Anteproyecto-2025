@@ -1,0 +1,28 @@
+# --- Core Data Science ---
+numpy>=1.21.0
+pandas>=1.3.5
+scipy>=1.7.0
+scikit-learn>=1.0.2
+matplotlib>=3.5.0
+seaborn>=0.11.2
+
+# --- Deep Learning (PyTorch) ---
+# Nota: La versión exacta depende de tu CUDA (GPU)
+torch>=1.12.0
+
+# --- Graph Neural Networks (GNN) ---
+torch-geometric>=2.1.0
+networkx>=2.6.0
+# Dependencias opcionales pero recomendadas para GNN rápidas:
+# torch-scatter
+# torch-sparse
+# torch-cluster
+
+# --- Reinforcement Learning (RL) ---
+gymnasium>=0.28.1
+stable-baselines3>=2.0.0
+
+# --- Utilidades y Procesamiento ---
+tqdm>=4.64.0           # Barras de progreso
+imbalanced-learn>=0.9.0 # Vital para riesgo crediticio (SMOTE, etc.)
+jupyterlab>=3.4.0
