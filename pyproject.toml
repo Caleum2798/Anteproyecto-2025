@@ -1,0 +1,17 @@
+[project]
+name = "gnn-rl"
+version = "0.0.1"
+description = "Recommended Programming Environment for a GNN-RL Model"
+authors = [
+    {name = "Caleum2798",email = "jsgonzalezm3@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">3.10"
+dependencies = [
+    "torch-geometric (>=2.7.0,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

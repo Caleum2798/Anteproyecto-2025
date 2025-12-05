@@ -1,0 +1,74 @@
+# Documentación de Linaje de Datos: Home Credit Default Risk
+
+---
+
+## 1. Resumen Ejecutivo
+Este documento describe el linaje de datos (Data Lineage) para el proyecto "Home Credit Default Risk". El objetivo es trazar el ciclo de vida de los datos desde las 7 fuentes relacionales crudas hasta la **Tabla Analítica Base (ABT)** unificada que alimenta los modelos de Machine Learning.
+
+La arquitectura de datos sigue un esquema de **estrella/copo de nieve**, donde la tabla de aplicaciones actual se enriquece con el comportamiento histórico del cliente (interno y externo).
+
+---
+
+## 2. Descripción de Fuentes de Datos (Origen)
+
+El dataset consta de 7 tablas interconectadas. A continuación se detalla el contenido y las llaves de enlace de cada una.
+
+| Tabla (Archivo) | Descripción Funcional | Llave Principal (PK) | Llave Foránea (FK) |
+| :--- | :--- | :--- | :--- |
+| **application_{train\|test}** | **Tabla Eje.** Contiene la información estática de la solicitud de crédito actual (Ingresos, edad, tipo de contrato, etc.). En *train* incluye la variable objetivo `TARGET`. | `SK_ID_CURR` | N/A |
+| **bureau** | **Historial Externo.** Datos de créditos anteriores del cliente reportados por otras instituciones financieras (Buró de Crédito). | `SK_ID_BUREAU` | `SK_ID_CURR` |
+| **bureau_balance** | **Detalle Mensual Externo.** Saldos mensuales y estatus de cada crédito listado en la tabla *bureau*. | N/A | `SK_ID_BUREAU` |
+| **previous_application** | **Historial Interno.** Solicitudes de crédito previas que el cliente ha realizado directamente con Home Credit (Aprobadas, Rechazadas, Canceladas). | `SK_ID_PREV` | `SK_ID_CURR` |
+| **POS_CASH_balance** | **Saldos POS.** Historial mensual de créditos de consumo (Punto de Venta) o efectivo previos con Home Credit. | N/A | `SK_ID_PREV`, `SK_ID_CURR` |
+| **installments_payments** | **Historial de Pagos.** Registro de cada pago realizado vs. pago esperado. Permite calcular morosidad. | N/A | `SK_ID_PREV`, `SK_ID_CURR` |
+| **credit_card_balance** | **Saldos Tarjeta.** Historial mensual de saldos y límites de tarjetas de crédito emitidas por Home Credit. | N/A | `SK_ID_PREV`, `SK_ID_CURR` |
+
+---
+
+## 3. Contexto y Origen de los Datos (Business Context)
+
+### 3.1 La Organización: Home Credit Group
+Los datos provienen de **Home Credit Group**, un proveedor internacional de financiamiento al consumo fundado en 1997 y con operaciones en 9 países (principalmente en Asia y Europa del Este). Su modelo de negocio se centra en otorgar préstamos a personas con poco o nulo historial crediticio.
+
+### 3.2 El Problema de Negocio: La Población "No Bancarizada"
+Muchas personas luchan por obtener préstamos porque no tienen un historial crediticio formal suficiente para los bancos tradicionales. Desafortunadamente, esta población a menudo es presa de prestamistas poco confiables.
+* **Desafío:** ¿Cómo prestar dinero de forma segura a alguien de quien no tienes referencias bancarias?
+* **Solución:** Home Credit utiliza una variedad de datos alternativos (incluyendo información de telecomunicaciones y transaccional) para predecir la capacidad de pago de sus clientes.
+
+### 3.3 El Objetivo del Dataset
+El propósito de este conjunto de datos es desarrollar modelos de Machine Learning que puedan predecir con precisión la probabilidad de incumplimiento de pago (Default).
+* **Meta:** Asegurar que los clientes capaces de pagar no sean rechazados injustamente.
+* **Variable Objetivo (`TARGET`):**
+    * `0`: El cliente pagó su crédito a tiempo.
+    * `1`: El cliente tuvo dificultades de pago (retraso de más de X días en al menos una de las primeras Y cuotas).
+
+---
+## 4. Análisis de Calidad de Datos (Data Quality)
+
+Antes del modelado, se realizó una auditoría de calidad para identificar volúmenes, valores nulos y duplicidad.
+
+### 4.1 Volumetría y Duplicados
+La integridad referencial es sólida. No se encontraron registros duplicados exactos en la tabla principal de entrenamiento.
+
+| Tabla | Filas (Registros) | Columnas | Duplicados (Filas exactas) | Llave Única |
+| :--- | :--- | :--- | :--- | :--- |
+| **application_train** | 307,511 | 122 | **0** | `SK_ID_CURR` |
+| **bureau** | 1,716,428 | 17 | 0 | `SK_ID_BUREAU` |
+| **previous_application** | 1,670,214 | 37 | 0 | `SK_ID_PREV` |
+| **installments_payments** | 13,605,401 | 8 | 0 | (Composite Key) |
+| **POS_CASH_balance** | 10,001,358 | 8 | 0 | (Composite Key) |
+| **credit_card_balance** | 3,840,312 | 23 | 0 | (Composite Key) |
+
+### 4.2 Datos Faltantes (Missing Values)
+El dataset presenta una alta densidad de valores nulos, lo que requiere estrategias específicas de imputación. No se recomienda eliminar filas con nulos, ya que se perdería gran parte de la información.
+
+**Top Columnas con mayor % de Nulos (application_train):**
+
+| Variable | Descripción | % Faltante | Estrategia Recomendada |
+| :--- | :--- | :--- | :--- |
+| `COMMONAREA_AVG` | Área común del edificio | ~69.9% | Crear bandera `_IS_MISSING` |
+| `NONLIVINGAPARTMENTS_AVG` | Área no habitable | ~69.4% | Imputación (Cero o Mediana) |
+| `OWN_CAR_AGE` | Antigüedad del auto | ~66.0% | Asumir 0 o imputar con media |
+| `EXT_SOURCE_1` | Score externo fuente 1 | ~56.4% | **Crítico:** Imputar con cuidado (son predictores fuertes) |
+
+> **Nota Técnica:** Muchos valores nulos contienen información estructural. Por ejemplo, un nulo en `OWN_CAR_AGE` probablemente indica que el cliente **no tiene auto**, no que se perdió el dato.
