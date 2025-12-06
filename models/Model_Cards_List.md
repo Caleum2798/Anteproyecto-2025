@@ -4,7 +4,7 @@ Este documento define los indicadores clave de desempeño (KPIs) y los parámetr
 
 ---
 
-## 1. Métricas de Negocio (Enfoque RL)
+## 1. Comparativo Métricas de Negocio (Enfoque RL)-(Baseline) |
 *Estas métricas evalúan la capacidad del "Agente" para maximizar la rentabilidad del portafolio.*
 
 * **💰 Recompensa Acumulada (Cumulative Reward):**
@@ -57,7 +57,6 @@ Este documento define los indicadores clave de desempeño (KPIs) y los parámetr
 | **Recompensa ($r_t$)** | Flotante | Valor del feedback recibido del entorno. | Solo disponible en entrenamiento/validación. |
 
 ---
-
 ## 4. Criterios de Éxito del Proyecto
 El modelo se considerará exitoso si cumple simultáneamente:
 1.  **AUC-ROC** superior a 0.74 en el set de prueba.

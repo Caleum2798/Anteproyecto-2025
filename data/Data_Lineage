@@ -72,3 +72,107 @@ El dataset presenta una alta densidad de valores nulos, lo que requiere estrateg
 | `EXT_SOURCE_1` | Score externo fuente 1 | ~56.4% | **Crítico:** Imputar con cuidado (son predictores fuertes) |
 
 > **Nota Técnica:** Muchos valores nulos contienen información estructural. Por ejemplo, un nulo en `OWN_CAR_AGE` probablemente indica que el cliente **no tiene auto**, no que se perdió el dato.
+
+## 5. Diccionario de Datos (Data Dictionary)
+
+A continuación se detallan las variables más relevantes de la tabla principal (`application_train`), agrupadas por su función de negocio.
+
+### 5.1 Identificadores y Variable Objetivo
+Estas columnas definen la unidad de análisis y lo que buscamos predecir.
+
+| Variable | Tipo de Dato | Descripción | Notas Importantes |
+| :--- | :--- | :--- | :--- |
+| **SK_ID_CURR** | `int64` | ID único de la solicitud de crédito actual. | Llave primaria para cruces. |
+| **TARGET** | `int64` | Variable a predecir (Target). | **0:** Préstamo pagado a tiempo.<br>**1:** Préstamo con dificultades de pago. |
+| **NAME_CONTRACT_TYPE** | `object` | Tipo de préstamo solicitado. | 'Cash loans' (Efectivo) o 'Revolving loans' (Rotativo). |
+
+### 5.2 Información Financiera del Cliente
+Variables relacionadas con la capacidad económica y el monto solicitado.
+
+| Variable | Tipo de Dato | Descripción | Notas Importantes |
+| :--- | :--- | :--- | :--- |
+| **AMT_INCOME_TOTAL** | `float64` | Ingresos totales anuales del cliente. | Base para calcular capacidad de pago. |
+| **AMT_CREDIT** | `float64` | Monto total del crédito otorgado. | |
+| **AMT_ANNUITY** | `float64` | Monto de la anualidad (pago periódico) del préstamo. | |
+| **AMT_GOODS_PRICE** | `float64` | Precio de los bienes para los que se pide el préstamo. | Solo aplica a préstamos de consumo. |
+
+### 5.3 Demografía y Perfil Social
+Características personales del solicitante.
+
+| Variable | Tipo de Dato | Descripción | Notas Importantes |
+| :--- | :--- | :--- | :--- |
+| **CODE_GENDER** | `object` | Género del cliente. | 'M', 'F', 'XNA' (valores nulos). |
+| **DAYS_BIRTH** | `int64` | Edad del cliente en días al momento de la solicitud. | **OJO:** Son valores negativos (ej. -15000). Para obtener años: `DAYS_BIRTH / -365`. |
+| **DAYS_EMPLOYED** | `int64` | Días que lleva en su empleo actual. | **OJO:** Valores negativos. El valor `365243` indica "Desempleado" o "Pensionado" (Anomaly). |
+| **NAME_EDUCATION_TYPE** | `object` | Nivel educativo máximo alcanzado. | Ej: 'Secondary / secondary special', 'Higher education'. |
+| **NAME_FAMILY_STATUS** | `object` | Estado civil. | Ej: 'Married', 'Single / not married'. |
+| **CNT_CHILDREN** | `int64` | Número de hijos. | |
+
+### 5.4 Posesiones y Activos
+Indicadores de estabilidad económica (vivienda y transporte).
+
+| Variable | Tipo de Dato | Descripción | Notas Importantes |
+| :--- | :--- | :--- | :--- |
+| **FLAG_OWN_CAR** | `object` | Bandera: ¿El cliente posee automóvil? | 'Y' / 'N'. |
+| **OWN_CAR_AGE** | `float64` | Antigüedad del automóvil en años. | Contiene muchos nulos (significa que no tiene auto). |
+| **FLAG_OWN_REALTY** | `object` | Bandera: ¿El cliente posee vivienda/inmuebles? | 'Y' / 'N'. |
+| **NAME_HOUSING_TYPE** | `object` | Situación de vivienda. | Ej: 'House / apartment', 'Rented apartment'. |
+
+### 5.5 Scores Externos (Normalizados)
+Datos provenientes de fuentes externas anonimizadas. Son predictores muy fuertes.
+
+| Variable | Tipo de Dato | Descripción | Notas Importantes |
+| :--- | :--- | :--- | :--- |
+| **EXT_SOURCE_1** | `float64` | Puntaje normalizado de fuente externa 1. | Rango 0 a 1. Muchos valores nulos. |
+| **EXT_SOURCE_2** | `float64` | Puntaje normalizado de fuente externa 2. | Rango 0 a 1. |
+| **EXT_SOURCE_3** | `float64` | Puntaje normalizado de fuente externa 3. | Rango 0 a 1. |
+
+### 5.6 Datos del Entorno (Vivienda)
+Variables sobre el edificio donde vive el cliente. (Todas normalizadas entre 0 y 1).
+*Nota: Este grupo tiene ~50% de datos nulos.*
+
+| Variable | Descripción |
+| :--- | :--- |
+| **APARTMENTS_AVG** | Tamaño promedio del apartamento. |
+| **BASEMENTAREA_AVG** | Área del sótano. |
+| **YEARS_BEGINEXPLUATATION_AVG** | Antigüedad del edificio. |
+| **ELEVATORS_AVG** | Cantidad de elevadores. |
+
+### 5.7 Entorno Social (Social Circle)
+Estas variables son proxies de "Riesgo por Asociación". Home Credit analiza el círculo social del cliente (probablemente basado en cruces de teléfonos o direcciones) para ver si sus conocidos pagan sus deudas.
+
+| Variable | Tipo de Dato | Descripción | Notas Importantes (Interpretación) |
+| :--- | :--- | :--- | :--- |
+| **OBS_30_CNT_SOCIAL_CIRCLE** | `float64` | **Observados:** Cuántas personas en el círculo social del cliente tienen observaciones/retrasos (30 días). | "Dime con quién andas..." |
+| **DEF_30_CNT_SOCIAL_CIRCLE** | `float64` | **Default:** Cuántas personas en su círculo social efectivamente entraron en Default (impago severo). | **Variable Predictiva Fuerte.** Si tus amigos no pagan, aumenta tu riesgo. |
+| **REGION_RATING_CLIENT** | `int64` | Calificación de la región donde vive el cliente. | 1, 2, 3. (1 es mejor zona, 3 es zona de mayor riesgo). |
+
+### 5.8 Comportamiento durante la Solicitud
+Analiza *cuándo* y *cómo* el cliente interactuó con el proceso de solicitud. Estos metadatos pueden revelar urgencia o desorganización.
+
+| Variable | Descripción | Notas Importantes |
+| :--- | :--- | :--- |
+| **WEEKDAY_APPR_PROCESS_START** | Día de la semana en que inició la solicitud. | Lunes, Martes, etc. |
+| **HOUR_APPR_PROCESS_START** | Hora del día en que inició la solicitud. | Aplicar a las 3:00 AM puede tener un riesgo diferente a aplicar a las 10:00 AM. |
+| **REG_CITY_NOT_LIVE_CITY** | Bandera (0/1). | 1 si la dirección de registro permanente es diferente a la dirección de contacto actual. (Posible inestabilidad). |
+| **REG_CITY_NOT_WORK_CITY** | Bandera (0/1). | 1 si la dirección de registro es diferente a la ciudad de trabajo. |
+
+### 5.9 Documentación Entregada (Flags)
+Hay 20 columnas (`FLAG_DOCUMENT_2` a `FLAG_DOCUMENT_21`) que indican qué documentos presentó el cliente.
+
+| Variable | Descripción | Importancia |
+| :--- | :--- | :--- |
+| **FLAG_DOCUMENT_3** | Documento de identidad principal. | Es el más común. Casi todos tienen '1'. |
+| **FLAG_DOCUMENT_X** | Otros documentos (nómina, referencias, escrituras). | Un cliente que entrega más documentación opcional suele ser menos riesgoso (muestra voluntad y transparencia). |
+
+### 5.10 Historial de Contacto y Registro
+Estas variables miden la estabilidad del cliente. 
+
+| Variable | Tipo de Dato | Descripción | Notas Importantes (Interpretación) |
+| :--- | :--- | :--- | :--- |
+| **DAYS_LAST_PHONE_CHANGE** | `float64` | Días desde el último cambio de número de teléfono. | **Predictor Clave.** Si es cercano a 0 (cambió ayer), es sospechoso. Si es un número grande (mismo teléfono por años), indica estabilidad. |
+| **DAYS_REGISTRATION** | `float64` | Días desde que el cliente se registró en su dirección actual. | Valores negativos. Mide arraigo en la vivienda. |
+| **DAYS_ID_PUBLISH** | `int64` | Días desde que el cliente renovó su documento de identidad. | Valores negativos. Un documento muy reciente podría indicar un cambio de identidad o robo, aunque también renovación normal. |
+ 
+  *Nota Técnica:* Cambios frecuentes de teléfono o documentos recientes pueden indicar inestabilidad o riesgo de fraude.
+---
