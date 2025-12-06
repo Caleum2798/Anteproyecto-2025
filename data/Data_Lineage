@@ -2,8 +2,8 @@
 
 ---
 
-## 1. Resumen Ejecutivo
-Este documento describe el linaje de datos (Data Lineage) para el proyecto "Home Credit Default Risk". El objetivo es trazar el ciclo de vida de los datos desde las 7 fuentes relacionales crudas hasta la **Tabla Analítica Base (ABT)** unificada que alimenta los modelos de Machine Learning.
+## 1. Resumen
+Este documento describe el linaje de datos (Data Lineage) para el proyecto Modelo de riesgo GNN_RL con la base de "Home Credit Default Risk". El objetivo es trazar el ciclo de vida de los datos desde las 7 fuentes relacionales crudas hasta la **Tabla Analítica Base (ABT)** unificada que alimenta el modelo de Deep learning (GNN-RL).
 
 La arquitectura de datos sigue un esquema de **estrella/copo de nieve**, donde la tabla de aplicaciones actual se enriquece con el comportamiento histórico del cliente (interno y externo).
 
