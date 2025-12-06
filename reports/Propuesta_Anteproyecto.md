@@ -117,7 +117,7 @@ Los *embeddings* de la GNN servirán como "Estado" ($S$) para un agente **Deep Q
 **Ajuste de Parámetros:** Los hiperparámetros (tasa de aprendizaje, factor de descuento $\gamma$) serán ajustados mediante búsqueda de rejilla (*Grid Search*) en el conjunto de validación.
 
 ## 4.4. Fase 4: Validación
-El modelo se evaluará utilizando validación cruzada ($k=5$). Las métricas principales serán **ROC-AUC** y **Ganancia Esperada** (suma de recompensas en test).
+El modelo se evaluará utilizando validación cruzada ($k=5$). Las métricas principales serán **ROC-AUC** y **Ganancia Esperada** (suma de recompensas en test). Ademas se comparara con otros Modelos de ML mas usados como "Random Forest", "XGBoost" o "Modelos logit"
 
 # 5. Cronograma y actividades
 
